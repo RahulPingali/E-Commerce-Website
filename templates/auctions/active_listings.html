@@ -1,0 +1,65 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Active Listings</h2>
+
+    {% if active_listings %}
+        {% for listing in active_listings %}
+            <div class="listing">
+                <h2>{{ listing.title }}</h2>
+                <p>{{ listing.description }}</p>
+                <p>Starting Bid: ${{ listing.starting_bid }}</p>
+                {% if listing.image %}
+                    <img src="{{ listing.image }}" alt="Image of {{ listing.title }}">
+                {% endif %}
+                <a href="{% url 'listing' listing.id %}">View Listing</a>
+
+                {% if user.is_authenticated %}
+                    {% if user == listing.user %}
+                        {% if listing.is_active %}
+                            <a href="{% url 'close_auction' listing.id %}">Close Auction</a>
+                        {% else %}
+                            {% if listing.winner == user %}
+                                <p>You have won this Auction!</p>
+                        {% endif %}
+                    {% endif %}
+                    {% else %}
+                        {% if listing.is_active %}
+                            <form action="{% url 'place_bid' listing.id %}" method="post">
+                                {% csrf_token %}
+                                <input type="number" step="0.01" name="bid" placeholder="Enter bid amount">
+                                <button type="submit">Place Bid</button>
+                            </form>
+                        {% endif %}
+                        <p>Highest Bid: ${{ listing.highest_bid }}</p>
+                        <p>Number of Bids: {{ listing.bids.count }}</p>
+                    {% endif %}
+                {% endif %}
+
+                <hr>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>There are no active listings.</p>
+    {% endif %}
+
+    <h2>Closed Listings</h2>
+    {%if closed_listings %}
+        {% for listing in closed_listings %}
+            <div class="listing">
+                <h2>{{ listing.title }}</h2>
+                <p>{{ listing.description }}</p>
+                <p>Starting Bid: ${{ listing.starting_bid }}</p>
+                {% if listing.image %}
+                    <img src="{{ listing.image }}" alt="Image of {{ listing.title }}">
+                {% endif %}
+                <a href="{% url 'listing' listing.id %}">View Listing</a>
+                <p>Winner: {{ listing.winner }}</p>
+                <hr>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>There are no closed listings.</p>
+    {% endif %}
+
+{% endblock %}

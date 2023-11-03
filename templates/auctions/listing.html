@@ -1,0 +1,67 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+<h2>{{ listing.title }}</h2>
+<p>{{ listing.description }}</p>
+<p>Starting Bid: ${{ listing.starting_bid }}</p>
+{% if listing.image %}
+    <img src="{{ listing.image }}" alt="Image of {{ listing.title }}">
+{% endif %}
+
+{% if user.is_authenticated %}
+    {% if listing in user.watchlist.all %}
+        <a href="{% url 'remove_from_watchlist' listing.id %}">Remove from Watchlist</a>
+    {% else %}
+        <a href="{% url 'add_to_watchlist' listing.id %}">Add to Watchlist</a>
+    {% endif %}
+
+    {% if user == listing.user %}
+        {% if listing.active %}
+            <form action="{% url 'close_auction' listing.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Close Auction</button>
+            </form>
+        {% else %}
+            <p>This listing is closed.</p>
+            {% if listing.winner == user %}
+                <p>You have won this Auction!</p>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        {% if listing.active %}
+            <form action="{% url 'place_bid' listing.id %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="bid">Bid</label>
+                    <input type="number" class="form-control" id="bid" name="bid" step="0.01" placeholder="Bid">
+                </div>
+                <button type="submit" class="btn btn-primary">Place Bid</button>
+            </form>
+        {% else %}
+            <p>This listing is closed.</p>
+        {% endif %}
+    {% endif %}
+{% else %}
+    <p>Please <a href="{% url 'login' %}">login</a> to leave a bid or comment.</p>
+{% endif %}
+
+<h3>Comments</h3>
+{% for comment in listing.comments.all %}
+    <p>{{ comment.user.username }}: {{ comment.comment }}</p>
+{% endfor %}
+
+{% if user.is_authenticated %}
+    <form action="{% url 'add_comment' listing.id %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="comment">Add a Comment</label>
+            <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Comment</button>
+    </form>
+{% else %}
+    <p>Please <a href="{% url 'login' %}">login</a> to leave a comment.</p>
+{% endif %}
+
+{% endblock %}
